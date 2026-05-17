@@ -1,0 +1,39 @@
+
+apiVersion: 1
+
+providers:
+  - name: 'ML_Monitoring_Dashboards'
+    orgId: 1
+    folder: 'MLOps'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards
+
+# Описание структуры дашборда для выбранной метрики (SLA p99 Latency)
+dashboard:
+  title: "ML Model SLA Monitoring"
+  refresh: "5s"
+  panels:
+    - title: "SLA: Время отклика p95 (Latency)"
+      type: "timeseries"
+      gridPos:
+        h: 8
+        w: 12
+        x: 0
+        y: 0
+      targets:
+        - expr: "histogram_quantile(0.99, sum(rate(http_server_duration_seconds_bucket[5m])) by (le))"
+          legendFormat: "p99 Latency"
+          datasource: "Prometheus"
+      fieldConfig:
+        defaults:
+          unit: "s" # Секунды
+          thresholds:
+            mode: "absolute"
+            steps:
+              - value: null
+                color: "green"
+              - value: 0.05 # Если p99 > 50мс, график станет красным (нарушение SLA)
+                color: "red"
